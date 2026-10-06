@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>해부학 라벨 퀴즈</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111318">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="app-header">
+    <button id="back-btn" class="icon-btn" hidden>‹</button>
+    <h1 id="header-title">덱</h1>
+    <button id="add-btn" class="icon-btn">+</button>
+  </header>
+
+  <main id="view-decks" class="view">
+    <ul id="deck-list" class="list"></ul>
+    <p id="deck-empty" class="empty-hint">덱이 없습니다. + 를 눌러 새 덱을 만드세요.</p>
+  </main>
+
+  <main id="view-deck" class="view" hidden>
+    <ul id="image-list" class="list"></ul>
+    <p id="image-empty" class="empty-hint">사진이 없습니다. + 를 눌러 사진을 추가하세요.</p>
+    <input id="file-input" type="file" accept="image/*" multiple hidden>
+  </main>
+
+  <main id="view-image" class="view" hidden>
+    <div id="image-stage">
+      <div id="image-wrap">
+        <img id="stage-img" alt="">
+        <svg id="stage-svg"></svg>
+      </div>
+      <button id="merge-confirm-btn" class="floating-btn" hidden>선택한 라벨 합치기</button>
+    </div>
+    <div id="ocr-progress" class="progress-bar" hidden>
+      <div id="ocr-progress-fill"></div>
+      <span id="ocr-progress-text">0%</span>
+    </div>
+
+    <div id="editor-toolbar" class="toolbar" hidden>
+      <button id="mode-select-btn" class="toolbar-btn active">편집</button>
+      <button id="mode-draw-btn" class="toolbar-btn">그리기</button>
+      <button id="mode-merge-btn" class="toolbar-btn">합치기</button>
+      <button id="preview-toggle-btn" class="toolbar-btn">가린 모습 보기</button>
+      <span id="editor-summary" class="toolbar-summary"></span>
+      <button id="confirm-labels-btn" class="primary-btn toolbar-confirm">확정</button>
+    </div>
+
+    <div id="label-edit-panel" class="toolbar label-edit-panel" hidden>
+      <input type="text" id="label-text-en" class="inline-input" placeholder="영어 이름">
+      <input type="text" id="label-text-ko" class="inline-input" placeholder="한글 이름 (선택)">
+      <label class="checkbox-row"><input type="checkbox" id="label-excluded"> 제외</label>
+      <span id="label-wrong-count" class="label-wrong-count"></span>
+      <button id="label-delete-btn" class="danger-btn small">삭제</button>
+      <button id="label-done-btn" class="primary-btn small">완료</button>
+    </div>
+
+    <div id="image-controls">
+      <label><input type="checkbox" id="opt-grayscale"> 흑백 변환</label>
+      <label><input type="checkbox" id="opt-contrast"> 대비 강화</label>
+      <button id="rerun-ocr-btn">다시 인식하기</button>
+      <span id="label-summary"></span>
+    </div>
+  </main>
+
+  <main id="view-quiz" class="view" hidden>
+    <div id="quiz-progress-bar">
+      <span id="quiz-remaining"></span>
+    </div>
+    <div id="quiz-stage">
+      <div id="quiz-wrap">
+        <img id="quiz-img" alt="">
+        <svg id="quiz-svg"></svg>
+      </div>
+    </div>
+    <div id="quiz-question-banner" class="quiz-banner"></div>
+    <div id="quiz-reverse-answer" class="quiz-answer-area" hidden>
+      <div id="quiz-choice-grid" class="quiz-choice-grid"></div>
+      <div id="quiz-typing-row" class="quiz-typing-row" hidden>
+        <input type="text" id="quiz-typing-input" placeholder="이름 입력">
+        <button id="quiz-submit-btn" class="primary-btn">제출</button>
+      </div>
+      <button id="quiz-dontknow-btn" class="danger-btn">모르겠음</button>
+    </div>
+  </main>
+
+  <div id="mask-sheet" class="sheet-backdrop" hidden>
+    <div class="sheet">
+      <h2>사각형을 어디까지 가릴까요?</h2>
+      <div class="sheet-options">
+        <button class="sheet-option" data-mode="text">글자만</button>
+        <button class="sheet-option" data-mode="padded">글자 + 여백</button>
+        <button class="sheet-option" data-mode="leader">지시선까지</button>
+      </div>
+      <div id="padding-row" class="sheet-padding-row">
+        <label for="padding-slider">여백</label>
+        <input type="range" id="padding-slider" min="0" max="30" value="10">
+        <span id="padding-value">10px</span>
+      </div>
+      <p id="leader-hint" class="sheet-hint" hidden>적용 후 사각형 모서리를 드래그해서 지시선까지 늘려주세요.</p>
+      <button id="mask-apply-btn" class="primary-btn">이 설정으로 계속</button>
+    </div>
+  </div>
+
+  <div id="quiz-setup-sheet" class="sheet-backdrop" hidden>
+    <div class="sheet">
+      <h2>퀴즈 설정</h2>
+      <div class="sheet-options">
+        <button class="sheet-option quiz-setup-option" data-key="direction" data-value="forward">이름 → 위치</button>
+        <button class="sheet-option quiz-setup-option" data-key="direction" data-value="reverse">위치 → 이름</button>
+      </div>
+      <div id="quiz-answer-type-row" class="sheet-options" hidden>
+        <button class="sheet-option quiz-setup-option" data-key="answerType" data-value="choice">4지선다</button>
+        <button class="sheet-option quiz-setup-option" data-key="answerType" data-value="typing">직접 입력</button>
+      </div>
+      <div class="sheet-options">
+        <button class="sheet-option quiz-setup-option" data-key="language" data-value="en">영어</button>
+        <button class="sheet-option quiz-setup-option" data-key="language" data-value="ko">한글</button>
+        <button class="sheet-option quiz-setup-option" data-key="language" data-value="mixed">섞기</button>
+      </div>
+      <button id="quiz-start-btn" class="primary-btn">퀴즈 시작</button>
+    </div>
+  </div>
+
+  <div id="quiz-done-overlay" class="sheet-backdrop" hidden>
+    <div class="sheet">
+      <h2>수고하셨습니다!</h2>
+      <div id="quiz-results-stats" class="quiz-results-stats"></div>
+      <div id="quiz-results-wronglist" class="quiz-results-wronglist"></div>
+      <div class="sheet-actions">
+        <button id="quiz-retry-btn" class="primary-btn">다시 풀기</button>
+        <button id="quiz-retry-opposite-btn" class="primary-btn">반대 모드로 풀기</button>
+      </div>
+      <button id="quiz-done-close-btn" class="danger-btn quiz-done-close">닫기</button>
+    </div>
+  </div>
+
+  <div id="quiz-round-overlay" class="sheet-backdrop quiz-round-overlay" hidden>
+    <div class="sheet quiz-round-sheet">
+      <h2 id="quiz-round-text"></h2>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="db.js"></script>
+<script src="ocr.js"></script>
+<script src="editor.js"></script>
+<script src="quiz.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
