@@ -1,4 +1,4 @@
-const SHELL_CACHE = 'anatomy-quiz-shell-v6';
+const SHELL_CACHE = 'anatomy-quiz-shell-v7';
 const RUNTIME_CACHE = 'anatomy-quiz-runtime-v5';
 
 const SHELL_FILES = [
