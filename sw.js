@@ -1,4 +1,4 @@
-const SHELL_CACHE = 'anatomy-quiz-shell-v5';
+const SHELL_CACHE = 'anatomy-quiz-shell-v6';
 const RUNTIME_CACHE = 'anatomy-quiz-runtime-v5';
 
 const SHELL_FILES = [
@@ -11,7 +11,10 @@ const SHELL_FILES = [
   './quiz.js',
   './app.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
